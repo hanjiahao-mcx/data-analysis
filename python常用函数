@@ -1,82 +1,68 @@
-import pandas as pd  # 导入 pandas 库，用来加载、清洗、处理、分析结构化数据（表格型数据）。
+一·re.findall(pattern, string)寻找函数
+pattern：要匹配的正则表达式（匹配规则）
+string：要搜索的目标字符串
+返回值：所有匹配结果组成的列表（list）
+
+例1 匹配所有数字
 import re
-# 读取 CSV 文件
-data = pd.read_csv('/Users/qijinnian/Desktop/learn/项目一厦门工作/job.csv')
+text = "我有2只猫，3条狗，还有10条鱼"
+result = re.findall(r'\d+', text)
+print(result) # 输出 ['2', '3', '10']
 
-# 查看前 5 行，确认数据导入成功
-print(data.head())
-import pandas as pd
-
-# CSV 文件路径
-file_path = '/Users/qijinnian/Desktop/learn/项目一厦门工作/job.csv'
-
-# 定义列名
-column_names = [
-    '职位', '招聘人数', '公司名称', '全职还是兼职', '工作经验', '语言要求', '年龄', '性别',
-    '学历', '工作地点', '工作时间', '工资', '福利', '联系人', '电话',
-    '公司位置', '企业性质', '经营项目', '岗位要求'
-]
-
-# 读取 CSV，并指定列名，header=None 表示原文件没有列名
-data = pd.read_csv('/Users/qijinnian/Desktop/learn/项目一厦门工作/job.csv', header=None, names=column_names)
-
-# 检查数据
-print(data.head())
+解释：
+\d 表示数字
++ 表示“匹配一个或多个”
+所以 \d+ 表示“连续的数字块”
+findall 找到所有这样的块并返回列表
 
 
-# 数据重复处理: 删除重复值
-data.drop_duplicates(inplace=True) # 删除DataFrame中重复的行，只保留每组重复行的第一行，其余行删除
-data.reset_index(drop=True, inplace=True) # 重置DataFrame的索引，删除旧索引，生成连续的0,1,2,... 索引
+例2 匹配所有中文“几几年”
+text = "我工作了3年，你工作了5年，他工作了10年"
+re.findall(r'\d+年', text)
 
-# 缺失值查看、处理：
-data.isnull().sum()
-"""
-职位             0
-招聘人数       1409
-公司名称          0
-全职还是兼职       0
-工作经验          0
-语言要求      89137
-年龄         59774
-性别             0
-学历             0
-工作地点          7
-工作时间       23989
-工资          17182
-福利          12272
-联系人            3
-电话              0
-公司位置         275
-企业性质          55
-经营项目         816
-岗位要求           0
-dtype: int64
-"""
+| 模式                           | 含义                      | 示例匹配结果                                                 
+| ----------------------------  | -----------------         | ------------------------------------------------------ 
+| `\d+`                         | 一个或多个数字（\d是一个数字） | “3年经验”→`['3']`                                         
+| `[A-Za-z]+`                   | 英文字母                    | “Hello123”→`['Hello']`                                 
+| `\S+年`                       | 不含空格的连续字符+“年”       | “三年经验”→`['三年']`                                        
+| `(\d+)年`                     | 只取数字部分（用括号分组）     | “3年经验”→`['3']`                                         
+| `re.findall('Python', text)`  | 查找“Python”出现的所有位置   | “I love Python, Python is good”→`['Python', 'Python']` 
 
-# 招聘人数处理：缺失值填 1 ，一般是一人; 若干人当成 3人
-data['招聘人数'].unique()
-data['招聘人数'].fillna(1) # 把 NaN（缺失值）填充为 1
-data['招聘人数'].replace('若干',3) # 把 '若干' 替换为 3
 
-# 年龄要求：缺失值填 无限；格式化
-data['年龄'].unique()
-data['年龄'].fillna('不限')
-data['年龄'] = data['年龄'].apply(
-    lambda x: x.replace('岁至', '-').replace('岁', '') if isinstance(x, str) else str(x)
-)
-# apply 可以对列中的每个元素应用自定义函数，把 '岁至' 替换为 '-'，把剩下的 '岁' 去掉
 
-# 语言要求: 忽视精通程度，格式化
-data['语言要求'].unique()
-data['语言要求'].fillna('不限', inplace=True)
-data['语言要求'] = data['语言要求'].apply(lambda x: x.split('水平')[0] )
-data['语言要求'].replace('其他', '不限')
+二.re.sub(pattern, repl, string, count=0)替换函数
+| 参数         | 含义                   
+| ---------   | -------------------- 
+| `pattern`   | 要匹配的正则表达式（规则）        
+| `repl`      | 要替换成的字符串             
+| `string`    | 要处理的原始字符串            
+| `count`     | 替换的次数，默认 0 表示替换所有匹配项 
+| **返回值**   | 返回一个新字符串（不会修改原字符串）   
 
-# 月薪: 格式化。根据一般经验取低值，比如 5000-6000, 取 5000
-data['工资'].unique()
-data['工资'] = data['工资'].apply(lambda x: x.replace('参考月薪： ', '') if '参考月薪： ' in str(x) else x)
-data['工资'] = data['工资'].apply(lambda x: x.split('-', 1)[0] if '-' in str(x) else x )
-data['工资'].fillna('0')
+例1 替换简单数字 
+import re
+text = "我有2只猫和3条狗"
+result = re.sub(r'\d+', '几', text)
+print(result) # 输出 ：我有几只猫和几条狗
 
-# 其它岗位说明：缺失值填无
-data.fillna('其他', inplace=True)
+例2 替换中文标点符号
+text = "你好，世界！今天，天气不错。"
+result = re.sub(r'[，。！]', ',', text)
+print(result) # 输出 ： 你好,世界,今天,天气不错,
+
+
+
+三.正则表达式
+| 表达式  | 含义                      | 举例匹配          | 说明             
+| :---   | :--------------          | :------------    | :------------- 
+| `.`    | 任意一个字符（除换行）       | `a`, `1`, `中`   | 通配符            
+| `\d`   | 数字（digit）              | `0-9`           | 相当于 `[0-9]`    
+| `\D`   | 非数字                     | `A`, `中`, `_`  | `\d` 的反义       
+| `\s`   | 空白符（空格、\t、\n）       | `" "`, `\t`     | whitespace     
+| `\S`   | 非空白符                   | `"A"`, `"3"`    | `\s` 的反义       
+| `\w`   | 单词字符（字母、数字、下划线） | `A`, `3`, `_`   | word character 
+| `\W`   | 非单词字符                  | `!`, `中`, `@`  | `\w` 的反义       
+
+
+
+
